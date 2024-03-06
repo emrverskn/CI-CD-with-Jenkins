@@ -1,8 +1,8 @@
 pipeline{
     agent any
     tools {
-        jdk 'Java17'
-        maven 'Maven3'
+        jdk 'Java'
+        maven 'maven'
     }
     environment {
         APP_NAME = "CI-CD-with-Jenkins"
