@@ -1,8 +1,8 @@
 pipeline{
     agent any
     tools {
-        jdk 'Java'
-        maven 'maven'
+        jdk 'Java17'
+        maven 'Maven3'
     }
     environment {
         APP_NAME = "CI-CD-with-Jenkins"
@@ -154,12 +154,12 @@ pipeline{
         failure {
             emailext body: '''${SCRIPT, template="groovy-html.template"}''', 
                     subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Failed", 
-                    mimeType: 'text/html',to: "emrverskn@gmail.com"
+                    // mimeType: 'text/html',to: "emrverskn@gmail.com"
             }
          success {
                emailext body: '''${SCRIPT, template="groovy-html.template"}''', 
                     subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Successful", 
-                    mimeType: 'text/html',to: "emrverskn@gmail.com"
+                    // mimeType: 'text/html',to: "emrverskn@gmail.com"
           }      
     }
 }
