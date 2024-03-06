@@ -24,7 +24,7 @@ pipeline{
     
         stage("Checkout from SCM"){
             steps {
-                git branch: 'main', url: 'https://github.com/emrverskn/CI-CD-with-Jenkins.git'
+                git branch: 'main', url: 'https://github.com/emrverskn/CI-CD-with-Jenkins'
             }
 
         }
