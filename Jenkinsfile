@@ -8,7 +8,6 @@ pipeline {
         APP_NAME = "CI-CD-with-Jenkins"
         RELEASE = "1.0.0"
         DOCKER_USER = "emrverskn"
-        // DOCKER_PASS = 'dockerhub'
         IMAGE_NAME = "${DOCKER_USER}" + "/" + "${APP_NAME}"
         IMAGE_TAG = "${RELEASE}-${BUILD_NUMBER}"
         JENKINS_API_TOKEN = credentials("JENKINS_API_TOKEN")
@@ -22,7 +21,7 @@ pipeline {
         }
         stage("Checkout from SCM") {
             steps {
-                git branch: 'main', url: 'https://github.com/emrverskn/CI-CD-with-Jenkins'
+                git branch: 'main', url: 'https://github.com/emrverskn/ci-cd-w-jenkins.git'
             }
         }
         stage("Build Application") {
@@ -68,11 +67,11 @@ pipeline {
         //         }
         //     }
         // }
+
         stage ('Cleanup Artifacts') {
             steps {
                 script {
-                    sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG}"
-                    sh "docker rmi ${IMAGE_NAME}:latest"
+                    sh "docker rmi ${IMAGE_NAME}"
                 }
             }
         }
@@ -88,16 +87,16 @@ pipeline {
             }
         }
     }
-//     post {
-//         failure {
-//             emailext body: '''${SCRIPT, template="groovy-html.template"}''', 
-//                     subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Failed", 
-//                     // mimeType: 'text/html',to: "emrverskn@gmail.com"
-//         }
-//         success {
-//             emailext body: '''${SCRIPT, template="groovy-html.template"}''', 
-//                     subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Successful", 
-//                     // mimeType: 'text/html',to: "emrverskn@gmail.com"
-//         }      
-    
+    post {
+        failure {
+            emailext body: '''${SCRIPT, template="groovy-html.template"}''', 
+                    subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Failed", 
+                    mimeType: 'text/html',to: "emrverskn@gmail.com"
+        }
+        success {
+            emailext body: '''${SCRIPT, template="groovy-html.template"}''', 
+                    subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Successful", 
+                    mimeType: 'text/html',to: "emrverskn@gmail.com"
+        }      
+    }
 }
