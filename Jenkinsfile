@@ -59,7 +59,7 @@ pipeline {
         stage('Push Image to Dockerhub Repo') {
             steps {
                 echo 'Pushing App Image to DockerHub Repo'
-                withCredentials([string(credentialsId: 'DeliToken', variable: 'DOCKERHUB_TOKEN')]) {
+                withCredentials([string(credentialsId: 'DockerHub-Token', variable: 'DOCKERHUB_TOKEN')]) {
                 sh 'docker login -u $DOCKER_USER -p $DOCKERHUB_TOKEN'
                 sh 'docker push "$IMAGE_NAME"'
                 
