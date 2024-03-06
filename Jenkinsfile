@@ -1,39 +1,46 @@
 pipeline {
     agent any
+
     tools {
         jdk 'Java17'
         maven 'Maven3'
     }
+
     environment {
-        APP_NAME = "CI-CD-with-Jenkins"
+        APP_NAME = "complete-prod-pipeline"
         RELEASE = "1.0.0"
         DOCKER_USER = "emrverskn"
-        IMAGE_NAME = "${DOCKER_USER}" + "/" + "${APP_NAME}"
+        IMAGE_NAME = "${DOCKER_USER}/${APP_NAME}"
         IMAGE_TAG = "${RELEASE}-${BUILD_NUMBER}"
         JENKINS_API_TOKEN = credentials("JENKINS_API_TOKEN")
-
+        JAVA_HOME = tool 'Java17'
     }
+
     stages {
         stage("Cleanup Workspace") {
             steps {
                 cleanWs()
             }
         }
+
         stage("Checkout from SCM") {
             steps {
                 git branch: 'main', url: 'https://github.com/emrverskn/ci-cd-w-jenkins.git'
             }
         }
+
         stage("Build Application") {
             steps {
                 sh "mvn clean package"
             }
         }
+
         stage("Test Application") {
             steps {
                 sh "mvn test"
             }
         }
+
         stage("Code Coverage with JaCoCo") {
             steps {
                 sh "mvn jacoco:prepare-agent test jacoco:report"
@@ -52,7 +59,7 @@ pipeline {
         stage('Push Image to Dockerhub Repo') {
             steps {
                 echo 'Pushing App Image to DockerHub Repo'
-                withCredentials([string(credentialsId: 'DockerHub-Token', variable: 'DOCKERHUB_TOKEN')]) {
+                withCredentials([string(credentialsId: 'DeliToken', variable: 'DOCKERHUB_TOKEN')]) {
                 sh 'docker login -u $DOCKER_USER -p $DOCKERHUB_TOKEN'
                 sh 'docker push "$IMAGE_NAME"'
                 
@@ -60,43 +67,45 @@ pipeline {
           }
         }
 
-        // stage("Trivy Scan") {
-        //     steps {
-        //         script {
-        //             sh ('docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image dmancloud/complete-prodcution-e2e-pipeline:latest --no-progress --scanners vuln  --exit-code 0 --severity HIGH,CRITICAL --format table')
-        //         }
-        //     }
-        // }
+        stage("Trivy Scan") {
+            steps {
+                script {
+                    sh 'docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image ${IMAGE_NAME} --no-progress --scanners vuln --exit-code 0 --severity HIGH,CRITICAL --format table'
+                }
+            }
+        }
 
-        stage ('Cleanup Artifacts') {
+        stage('Cleanup Artifacts') {
             steps {
                 script {
                     sh "docker rmi ${IMAGE_NAME}"
                 }
             }
         }
+
         stage("Trigger CD Pipeline") {
             steps {
                 script {
                     def localJenkinsUrl = 'http://localhost:8080'
                     def localJenkinsJobPath = 'job/gitops-complete-pipeline'
                     def localJenkinsToken = 'gitops-token'
-                    
+
                     sh "curl -v -k --user merve:${JENKINS_API_TOKEN} -X POST -H 'cache-control: no-cache' -H 'content-type: application/x-www-form-urlencoded' --data 'IMAGE_TAG=${IMAGE_TAG}' '${localJenkinsUrl}/${localJenkinsJobPath}/buildWithParameters?token=${localJenkinsToken}'"
                 }
             }
         }
     }
+
     post {
         failure {
-            emailext body: '''${SCRIPT, template="groovy-html.template"}''', 
-                    subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Failed", 
-                    mimeType: 'text/html',to: "emrverskn@gmail.com"
+            emailext body: '${SCRIPT, template="groovy-html.template"}',
+                    subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Failed",
+                    mimeType: 'text/html', to: "emrverskn@gmail.com"
         }
         success {
-            emailext body: '''${SCRIPT, template="groovy-html.template"}''', 
-                    subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Successful", 
-                    mimeType: 'text/html',to: "emrverskn@gmail.com"
-        }      
+            emailext body: '${SCRIPT, template="groovy-html.template"}',
+                    subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Successful",
+                    mimeType: 'text/html', to: "emrverskn@gmail.com"
+        }
     }
 }
