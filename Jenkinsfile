@@ -25,7 +25,7 @@ pipeline {
 
         stage("Checkout from SCM") {
             steps {
-                git branch: 'main', url: 'https://github.com/emrverskn/ci-cd-w-jenkins.git'
+                git branch: 'main', url: 'https://github.com/emrverskn/Test-App-with-Docker-Jenkins.git'
             }
         }
 
@@ -97,15 +97,21 @@ pipeline {
     }
 
     post {
-        failure {
-            emailext body: '${SCRIPT, template="groovy-html.template"}',
-                    subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Failed",
-                    mimeType: 'text/html', to: "emrverskn@gmail.com"
+        always {
+            emailext (
+                subject: "Pipeline Status: ${BUILD_NUMBER}",
+                body: '''<html>
+                        <body>
+                        <p>Build Status: ${BUILD_STATUS}</p>
+                        <p>Build Number: ${BUILD_NUMBER}</p>
+                        <p>Check the <a href="${BUILD_URL}">console output</a>.</p>
+                        </body>
+                        </html>''',
+                to: 'emrverskn@gmail.com',
+                from: 'jenkins@noreplay',
+                replyTo: 'emrverskn@gmail.com',
+                mimeType: 'text/html'
+                )
+            }
         }
-        success {
-            emailext body: '${SCRIPT, template="groovy-html.template"}',
-                    subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Successful",
-                    mimeType: 'text/html', to: "emrverskn@gmail.com"
-        }
-    }
 }
